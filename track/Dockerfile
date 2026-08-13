@@ -1,10 +1,11 @@
-FROM eclipse-temurin:17-jdk
+FROM eclipse-temurin:21-jdk
 
 WORKDIR /app
 
 COPY . .
 
 RUN chmod +x mvnw
+
 RUN ./mvnw clean package -DskipTests
 
 CMD ["sh", "-c", "java -jar target/track-0.0.1-SNAPSHOT.jar --server.port=${PORT:-8080}"]
