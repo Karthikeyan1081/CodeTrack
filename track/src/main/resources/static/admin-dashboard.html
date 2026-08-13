@@ -1,0 +1,851 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - CodeTrack</title>
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box;}
+        html{-webkit-text-size-adjust:100%;}
+        body{
+            font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;
+            background:#eef1f7;
+            color:#141a2c;
+            min-height:100vh;
+            -webkit-font-smoothing:antialiased;
+        }
+
+        ::selection{background:#e7edfc;color:#173a9e;}
+
+        button, input, select{font-family:inherit;}
+
+        :focus-visible{outline:2px solid #2454d6;outline-offset:2px;border-radius:4px;}
+
+        .icon{width:15px;height:15px;flex-shrink:0;vertical-align:-3px;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;}
+        .icon-sm{width:13px;height:13px;}
+
+        /* NAV */
+        .navbar{
+            background:linear-gradient(180deg,#0b1220 0%, #16213f 100%);
+            color:white;
+            padding:0 30px;
+            height:60px;
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+            box-shadow:0 1px 0 rgba(255,255,255,0.06), 0 6px 18px -10px rgba(0,0,0,.5);
+            position:sticky;
+            top:0;
+            z-index:200;
+        }
+        .navbar h1{
+            font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;
+            font-size:19px;
+            font-weight:700;
+            color:#ffffff;
+            letter-spacing:.2px;
+            display:flex;
+            align-items:center;
+            gap:9px;
+        }
+        .navbar h1 .icon{width:19px;height:19px;color:#7ba4ff;}
+        .nav-right{display:flex;align-items:center;gap:16px;}
+        .nav-right span{font-size:12.5px;color:#a9b3c9;font-weight:500;}
+        .logout-btn{
+            padding:8px 16px;
+            background:rgba(209,68,58,0.16);
+            color:#ff9d94;
+            border:1px solid rgba(209,68,58,0.35);
+            border-radius:7px;
+            cursor:pointer;
+            font-size:12.5px;
+            font-weight:600;
+            transition:.15s;
+        }
+        .logout-btn:hover{background:#d1443a;border-color:#d1443a;color:white;}
+
+        /* TABS */
+        .tab-bar{
+            background:#ffffff;
+            border-bottom:1px solid #e2e7f1;
+            display:flex;
+            padding:0 30px;
+            overflow-x:auto;
+            scrollbar-width:none;
+            position:sticky;
+            top:60px;
+            z-index:150;
+        }
+        .tab-bar::-webkit-scrollbar{display:none;}
+        .tab-btn{
+            padding:15px 20px;
+            border:none;
+            background:none;
+            font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;
+            font-size:13.5px;
+            font-weight:600;
+            color:#66708a;
+            cursor:pointer;
+            border-bottom:2.5px solid transparent;
+            margin-bottom:-1px;
+            transition:.15s;
+            white-space:nowrap;
+            display:flex;
+            align-items:center;
+            gap:8px;
+        }
+        .tab-btn .icon{color:currentColor;opacity:.85;}
+        .tab-btn.active{color:#2454d6;border-bottom-color:#2454d6;}
+        .tab-btn:hover{color:#173a9e;}
+        .tab-content{display:none;}
+        .tab-content.active{display:block;animation:fadeIn .25s ease;}
+
+        @keyframes fadeIn{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:translateY(0);}}
+
+        /* MAIN */
+        .main{padding:24px 30px 60px;max-width:1600px;margin:0 auto;}
+
+        /* SUMMARY */
+        .summary-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-bottom:18px;}
+        .summary-card{
+            background:#ffffff;
+            border-radius:18px;
+            border:1px solid #e2e7f1;
+            padding:18px 18px 16px;
+            text-align:left;
+            box-shadow:0 1px 2px rgba(11,18,32,.05);
+            position:relative;
+            overflow:hidden;
+        }
+        .summary-card::before{
+            content:"";
+            position:absolute;top:0;left:0;right:0;height:3px;
+            background:linear-gradient(90deg,#2454d6,#7ba4ff);
+        }
+        .summary-card h3{
+            font-size:11px;
+            color:#66708a;
+            margin-bottom:8px;
+            font-weight:600;
+            text-transform:uppercase;
+            letter-spacing:.55px;
+        }
+        .summary-card p{
+            font-family:ui-monospace,SFMono-Regular,Consolas,Menlo,monospace;
+            font-size:26px;
+            font-weight:700;
+            color:#0b1220;
+            font-variant-numeric:tabular-nums;
+        }
+
+        /* LAST UPDATED STRIP */
+        #lastUpdatedStrip{
+            background:#ffffff;
+            border:1px solid #e2e7f1;
+            border-radius:10px;
+            padding:11px 20px;
+            margin-bottom:18px;
+            box-shadow:0 1px 2px rgba(11,18,32,.05);
+            display:flex;
+            align-items:center;
+            gap:24px;
+            flex-wrap:wrap;
+        }
+        #lastUpdatedStrip > span:first-child{
+            font-size:11px;font-weight:700;color:#66708a;
+            text-transform:uppercase;letter-spacing:.55px;
+        }
+        #lastUpdatedStrip span{
+            font-size:12.5px;color:#66708a;
+            display:inline-flex;align-items:center;gap:6px;
+            font-family:ui-monospace,SFMono-Regular,Consolas,Menlo,monospace;
+        }
+        .status-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+        .status-dot.lc{background:#c9821c;}
+        .status-dot.cc{background:#6b4a35;}
+        .status-dot.cf{background:#1f6fa8;}
+
+        /* PANEL */
+        .panel{
+            background:#ffffff;
+            border:1px solid #e2e7f1;
+            border-radius:18px;
+            padding:22px;
+            box-shadow:0 1px 2px rgba(11,18,32,.05);
+            margin-bottom:20px;
+        }
+        .panel-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;flex-wrap:wrap;gap:10px;}
+        .panel-header h2{
+            font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;
+            font-size:16.5px;
+            font-weight:700;
+            color:#0b1220;
+            display:flex;align-items:center;gap:9px;
+        }
+        .panel-header h2 .icon{width:17px;height:17px;color:#2454d6;}
+        .panel-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
+
+        /* FILTER */
+        .filter-bar{display:flex;gap:10px;margin-bottom:18px;flex-wrap:wrap;align-items:center;}
+        .filter-bar input,.filter-bar select{
+            padding:9px 13px;
+            border:1px solid #ccd4e5;
+            border-radius:8px;
+            font-size:13px;
+            outline:none;
+            background:#ffffff;
+            color:#141a2c;
+            transition:.15s;
+        }
+        .filter-bar input:focus,.filter-bar select:focus{border-color:#2454d6;box-shadow:0 0 0 3px #e7edfc;}
+        .filter-bar input{min-width:240px;}
+        .filter-bar input::placeholder{color:#9aa4bb;}
+
+        /* BUTTONS */
+        .btn{
+            padding:9px 16px;
+            border:none;
+            border-radius:8px;
+            font-size:13px;
+            font-weight:600;
+            cursor:pointer;
+            transition:.15s;
+            white-space:nowrap;
+            display:inline-flex;
+            align-items:center;
+            gap:7px;
+            box-shadow:0 1px 2px rgba(11,18,32,.05);
+        }
+        .btn:active{transform:translateY(1px);}
+        .btn-primary{background:#2454d6;color:white;} .btn-primary:hover{background:#173a9e;}
+        .btn-success{background:#0f8a5f;color:white;} .btn-success:hover{background:#0b6d4a;}
+        .btn-danger{background:#d1443a;color:white;} .btn-danger:hover{background:#b3372e;}
+        .btn-warning{background:#b97a12;color:white;} .btn-warning:hover{background:#96620d;}
+        .btn-purple{background:#6d3fc0;color:white;} .btn-purple:hover{background:#5930a3;}
+        .btn-teal{background:#0c7f83;color:white;} .btn-teal:hover{background:#0a686b;}
+        .btn-sm{padding:5px 10px;font-size:12px;}
+
+        /* TABLE */
+        .table-wrap{overflow-x:auto;border:1px solid #e2e7f1;border-radius:10px;}
+        table{width:100%;border-collapse:collapse;font-size:13px;min-width:900px;}
+        thead tr{background:#16213f;color:#e7ecf8;}
+        th{
+            padding:12px;
+            text-align:left;
+            white-space:nowrap;
+            font-size:11px;
+            font-weight:700;
+            text-transform:uppercase;
+            letter-spacing:.5px;
+            color:#c3ccdf;
+        }
+        td{padding:10px 12px;border-bottom:1px solid #e2e7f1;white-space:nowrap;color:#141a2c;}
+        tbody tr:last-child td{border-bottom:none;}
+        tr:hover td{background:#f7f9fd;}
+
+        /* BADGES */
+        .badge{padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:.2px;}
+        .badge-ece{background:#dfeafe;color:#1d4ed8;} .badge-cse{background:#dcf5e6;color:#0f7a44;}
+        .badge-mech{background:#fdf1de;color:#96620d;} .badge-it{background:#fbe4f0;color:#a3195b;}
+        .badge-eee{background:#efe8fb;color:#5930a3;} .badge-dept{background:#dff0fc;color:#0369a1;}
+
+        .rank-badge{
+            background:#f1f2f5;color:#4b5568;
+            padding:3px 9px;border-radius:12px;font-size:11.5px;font-weight:700;
+            font-family:ui-monospace,SFMono-Regular,Consolas,Menlo,monospace;
+        }
+        .rank-1{background:linear-gradient(135deg,#f9e5ad,#f7e7bd);color:#a9791b;box-shadow:inset 0 0 0 1px rgba(169,121,27,.25);}
+        .rank-2{background:linear-gradient(135deg,#eef1f7,#e4e8f0);color:#5b6579;box-shadow:inset 0 0 0 1px rgba(91,101,121,.2);}
+        .rank-3{background:linear-gradient(135deg,#f7e1c9,#f4dcc4);color:#95511f;box-shadow:inset 0 0 0 1px rgba(149,81,31,.22);}
+
+        /* MODAL */
+        .modal-overlay{
+            display:none;position:fixed;inset:0;background:rgba(11,18,32,0.55);
+            z-index:1000;justify-content:center;align-items:flex-start;padding:40px 16px;
+            overflow-y:auto;backdrop-filter:blur(1.5px);
+        }
+        .modal-overlay.active{display:flex;}
+        .modal-box{
+            background:#ffffff;border-radius:18px;padding:28px;
+            width:100%;max-width:580px;max-height:88vh;overflow-y:auto;
+            box-shadow:0 24px 60px -16px rgba(11,18,32,.35);
+            animation:modalIn .18s ease;
+        }
+        @keyframes modalIn{from{opacity:0;transform:translateY(10px) scale(.98);}to{opacity:1;transform:translateY(0) scale(1);}}
+        .modal-box h2{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;font-size:19px;font-weight:700;color:#0b1220;margin-bottom:4px;}
+        .modal-sub{font-size:12.5px;color:#66708a;margin-bottom:18px;}
+        .section-title{
+            font-size:11px;font-weight:700;color:#2454d6;text-transform:uppercase;
+            letter-spacing:.6px;margin:16px 0 8px;padding-bottom:6px;border-bottom:2px solid #e7edfc;
+        }
+        .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+        .form-group{display:flex;flex-direction:column;gap:4px;}
+        .form-group label{font-size:11px;font-weight:600;color:#3c4358;}
+        .form-group input,.form-group select{
+            padding:9px 11px;border:1px solid #ccd4e5;border-radius:7px;font-size:13px;
+            background:#ffffff;color:#141a2c;
+        }
+        .form-group input:focus,.form-group select:focus{outline:none;border-color:#2454d6;box-shadow:0 0 0 3px #e7edfc;}
+        .modal-footer{display:flex;gap:10px;margin-top:18px;justify-content:flex-end;}
+        .modal-msg{font-size:12px;margin-top:8px;text-align:center;color:#66708a;}
+
+        /* EXPORT MODAL */
+        .export-box{
+            background:#ffffff;border-radius:18px;padding:26px;
+            width:100%;max-width:500px;max-height:88vh;overflow-y:auto;
+            box-shadow:0 24px 60px -16px rgba(11,18,32,.35);animation:modalIn .18s ease;
+        }
+        .export-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;}
+        .export-header h2{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;font-size:18px;font-weight:700;color:#0b1220;}
+        .close-x{font-size:22px;cursor:pointer;color:#9aa4bb;line-height:1;} .close-x:hover{color:#0b1220;}
+        .export-toolbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;}
+        .export-toolbar p{font-size:12px;color:#9aa4bb;}
+        .sel-all-btn{padding:4px 10px;border:1px solid #ccd4e5;border-radius:6px;background:#ffffff;font-size:11px;cursor:pointer;font-weight:600;color:#141a2c;}
+        .sel-all-btn:hover{border-color:#2454d6;color:#2454d6;}
+        #sortableColumns{max-height:380px;overflow-y:auto;padding-right:2px;}
+        .col-group{font-size:10px;font-weight:700;color:#2454d6;text-transform:uppercase;letter-spacing:.55px;padding:10px 4px 5px;display:flex;align-items:center;gap:6px;}
+        .column-card{
+            display:flex;align-items:center;gap:9px;background:#eef1f7;padding:9px 11px;
+            border-radius:8px;margin-bottom:5px;cursor:grab;border:1px solid #e2e7f1;transition:.15s;user-select:none;
+        }
+        .column-card:hover{background:#e7edfc;border-color:#c7d5f9;}
+        .column-card.dragging{opacity:0.4;}
+        .column-card input[type=checkbox]{width:14px;height:14px;cursor:pointer;accent-color:#2454d6;}
+        .column-card span{font-size:12.5px;color:#374151;display:flex;align-items:center;gap:7px;}
+        .column-card .icon{color:#66708a;}
+        .export-btn-main{
+            width:100%;margin-top:14px;padding:12px;border:none;border-radius:9px;background:#2454d6;
+            color:white;font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;
+        }
+        .export-btn-main:hover{background:#173a9e;}
+
+        /* DEPT CARDS */
+        .dept-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;}
+        .dept-card{background:#ffffff;border:1px solid #e2e7f1;border-radius:10px;padding:20px;box-shadow:0 1px 2px rgba(11,18,32,.05);border-left:4px solid #2454d6;}
+        .dept-card h3{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;font-size:15px;font-weight:700;color:#0b1220;margin-bottom:12px;display:flex;align-items:center;gap:8px;}
+        .dept-stat{display:flex;justify-content:space-between;font-size:13px;color:#66708a;margin-bottom:6px;}
+        .dept-stat span:last-child{font-weight:700;color:#0b1220;font-family:ui-monospace,SFMono-Regular,Consolas,Menlo,monospace;}
+        .dept-actions{display:flex;gap:8px;margin-top:14px;}
+
+        /* TOAST */
+        .toast{
+            position:fixed;bottom:24px;right:24px;left:auto;background:#0b1220;color:white;
+            padding:12px 20px;border-radius:10px;font-size:13px;z-index:9999;display:none;
+            box-shadow:0 24px 60px -16px rgba(11,18,32,.35);max-width:calc(100vw - 48px);
+        }
+        .toast.show{display:block;animation:slideIn 0.3s ease;}
+        @keyframes slideIn{from{transform:translateY(20px);opacity:0;}to{transform:translateY(0);opacity:1;}}
+
+        /* SPINNER */
+        .spinner{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,0.3);border-top-color:white;border-radius:50%;animation:spin 0.7s linear infinite;vertical-align:middle;margin-right:6px;}
+        @keyframes spin{to{transform:rotate(360deg);}}
+
+        @media(max-width:1200px){.summary-grid{grid-template-columns:repeat(3,1fr);}}
+        @media(max-width:900px){
+            .summary-grid{grid-template-columns:repeat(2,1fr);}
+            .main{padding:16px 16px 48px;}
+            .form-grid{grid-template-columns:1fr;}
+            .navbar{padding:0 16px;}
+            .tab-bar{padding:0 16px;}
+        }
+        @media(max-width:640px){
+            .summary-grid{grid-template-columns:1fr 1fr;gap:10px;}
+            .summary-card{padding:14px;}
+            .summary-card p{font-size:21px;}
+            .navbar h1{font-size:16px;}
+            .nav-right span{display:none;}
+            .panel{padding:16px;border-radius:10px;}
+            .panel-header{flex-direction:column;align-items:flex-start;}
+            .panel-actions{width:100%;}
+            .panel-actions .btn{flex:1 1 auto;justify-content:center;}
+            .filter-bar input{min-width:0;width:100%;}
+            .filter-bar{flex-direction:column;align-items:stretch;}
+            .filter-bar select{width:100%;}
+            .modal-box,.export-box{padding:20px;border-radius:10px;}
+            .toast{right:16px;left:16px;bottom:16px;}
+            #lastUpdatedStrip{flex-direction:column;align-items:flex-start;gap:8px;}
+        }
+
+        @media (prefers-reduced-motion: reduce){
+            *{animation-duration:.001ms !important;animation-iteration-count:1 !important;transition-duration:.001ms !important;}
+        }
+
+        .contest-card {
+            background: #ffffff;
+            border:1px solid #e2e7f1;
+            border-radius: 12px;
+            padding: 14px 16px;
+            margin-bottom: 10px;
+            box-shadow: 0 1px 2px rgba(11,18,32,.05);
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            flex-wrap:wrap;
+        }
+        .contest-card.lc        { border-left: 4px solid #c9821c; }
+        .contest-card.cc        { border-left: 4px solid #6b4a35; }
+        .contest-card.cf        { border-left: 4px solid #1f6fa8; }
+        .contest-card.past-card { border-left: 4px solid #ccd4e5; opacity:0.85; }
+        .contest-platform {
+            font-size: 11px; font-weight: 700;
+            padding: 3px 10px; border-radius: 20px;
+            background: #eef1f7; color: #66708a;
+            white-space: nowrap; min-width: 90px; text-align: center;
+        }
+        .contest-card.lc .contest-platform{background:#faf1de;color:#c9821c;}
+        .contest-card.cc .contest-platform{background:#f2e9e3;color:#6b4a35;}
+        .contest-card.cf .contest-platform{background:#e6f1f9;color:#1f6fa8;}
+        .contest-name { font-size: 13px; font-weight: 600; color: #0b1220; }
+        .contest-time {
+            font-size: 11px; color: #66708a;
+            margin-top: 3px; line-height: 1.6;
+            font-family:ui-monospace,SFMono-Regular,Consolas,Menlo,monospace;
+        }
+        .contest-link {
+            padding: 7px 14px; border-radius: 6px;
+            font-size: 12px; font-weight: 600;
+            text-decoration: none; white-space: nowrap;
+            color: white; background: #2454d6; margin-left: auto;
+        }
+        .contest-link:hover { background: #173a9e; }
+        .contest-link.grey  { background: #66708a; }
+        .contest-link.grey:hover { background: #4b5568; }
+    </style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<div class="navbar">
+    <h1>
+        <svg class="icon" viewBox="0 0 24 24"><path d="M13 2 4 14h6l-1 8 9-12h-6l1-8Z"/></svg>
+        CodeTrack — Admin
+    </h1>
+    <div class="nav-right">
+        <span id="adminEmail"></span>
+        <button class="logout-btn" onclick="logout()">Logout</button>
+    </div>
+</div>
+
+<!-- TABS -->
+<div class="tab-bar">
+    <button class="tab-btn active" onclick="switchTab('students',this)">
+        <svg class="icon" viewBox="0 0 24 24"><path d="M22 10 12 5 2 10l10 5 10-5Z"/><path d="M6 12v5c0 1.5 2.7 3 6 3s6-1.5 6-3v-5"/></svg>
+        Students
+    </button>
+    <button class="tab-btn" onclick="switchTab('advisors',this)">
+        <svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+        Advisors
+    </button>
+    <button class="tab-btn" onclick="switchTab('analytics',this)">
+        <svg class="icon" viewBox="0 0 24 24"><path d="M4 20V10M12 20V4M20 20v-7"/></svg>
+        Department Analytics
+    </button>
+    <button class="tab-btn" onclick="switchTab('contests',this)">
+        <svg class="icon" viewBox="0 0 24 24"><path d="M8 21h8M12 17v4M7 4h10v4a5 5 0 0 1-10 0V4Z"/><path d="M7 5H4a3 3 0 0 0 3 5M17 5h3a3 3 0 0 1-3 5"/></svg>
+        Contests
+    </button>
+</div>
+
+<div class="main">
+
+    <!-- ══════════ TAB 1 — STUDENTS ══════════ -->
+    <div id="tab-students" class="tab-content active">
+
+        <div class="summary-grid">
+            <div class="summary-card"><h3>Total Students</h3><p id="totalStudents">0</p></div>
+            <div class="summary-card"><h3>LeetCode Users</h3><p id="lcCount">0</p></div>
+            <div class="summary-card"><h3>CodeChef Users</h3><p id="ccCount">0</p></div>
+            <div class="summary-card"><h3>Codeforces Users</h3><p id="cfCount">0</p></div>
+            <div class="summary-card"><h3>Avg Total Solved</h3><p id="avgSolved">0</p></div>
+
+        </div>
+        <div id="lastUpdatedStrip">
+            <span>Platform Last Updated</span>
+            <span id="stripLC"><span class="status-dot lc"></span>LeetCode: —</span>
+            <span id="stripCC"><span class="status-dot cc"></span>CodeChef: —</span>
+            <span id="stripCF"><span class="status-dot cf"></span>Codeforces: —</span>
+        </div>
+        <div class="panel">
+            <div class="panel-header">
+                <h2>
+                    <svg class="icon" viewBox="0 0 24 24"><path d="M22 10 12 5 2 10l10 5 10-5Z"/><path d="M6 12v5c0 1.5 2.7 3 6 3s6-1.5 6-3v-5"/></svg>
+                    All Students
+                </h2>
+                <div class="panel-actions">
+                    <button class="btn btn-success" onclick="openCreateStudentModal()">
+                        <svg class="icon" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+                        Create Student
+                    </button>
+                    <button class="btn btn-purple" onclick="refreshAllStudents()" id="refreshAllBtn">
+                        <svg class="icon" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-2.6-6.3M21 4v5h-5"/></svg>
+                        Refresh All Stats
+                    </button>
+                    <button class="btn btn-teal" onclick="recalculateRanks()" id="rankBtn">
+                        <svg class="icon" viewBox="0 0 24 24"><path d="M8 21h8M12 17v4M7 4h10v4a5 5 0 0 1-10 0V4Z"/><path d="M7 5H4a3 3 0 0 0 3 5M17 5h3a3 3 0 0 1-3 5"/></svg>
+                        Recalculate Ranks
+                    </button>
+                    <button class="btn btn-primary" onclick="openExportModal()">
+                        <svg class="icon" viewBox="0 0 24 24"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg>
+                        Export Excel
+                    </button>
+                </div>
+            </div>
+
+            <div class="filter-bar">
+                <input type="text" id="studentSearch" placeholder="Search by name, register no..." onkeyup="filterStudents()">
+                <select id="deptFilter" onchange="filterStudents()">
+                    <option value="">All Departments</option>
+                    <option value="ECE">ECE</option>
+                    <option value="CSE">CSE</option>
+                    <option value="MECH">MECH</option>
+                    <option value="IT">IT</option>
+                    <option value="EEE">EEE</option>
+                    <option value="CIVIL">CIVIL</option>
+                </select>
+                <select id="yearFilter" onchange="filterStudents()">
+                    <option value="">All Years</option>
+                    <option value="1">Year 1</option>
+                    <option value="2">Year 2</option>
+                    <option value="3">Year 3</option>
+                    <option value="4">Year 4</option>
+                </select>
+                <select id="sortBy" onchange="filterStudents()">
+                    <option value="">Sort By</option>
+                    <option value="totalSolved">Total Solved</option>
+                    <option value="highestRating">Highest Rating</option>
+                    <option value="collegeRank">College Rank</option>
+                    <option value="departmentRank">Dept Rank</option>
+                </select>
+            </div>
+
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                    <tr>
+                        <th>College Rank</th><th>Dept Rank</th><th>Name</th>
+                        <th>Register No</th><th>Dept</th><th>Year</th><th>Sec</th>
+                        <th>LeetCode</th><th>CodeChef</th><th>Codeforces</th>
+                        <th>Total Solved</th><th>Highest Rating</th>
+                        <th>Actions</th>
+                    </tr>
+                    </thead>
+                    <tbody id="studentTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══════════ TAB 2 — ADVISORS ══════════ -->
+    <div id="tab-advisors" class="tab-content">
+        <div class="panel">
+            <div class="panel-header">
+                <h2>
+                    <svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+                    All Advisors
+                </h2>
+                <div class="panel-actions">
+                    <!-- Change this button to use new flow -->
+                    <button class="btn btn-success"
+                            onclick="openCreateAdvisorModal()">
+                        <svg class="icon" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+                        Create Advisor Account
+                    </button>
+                </div>
+            </div>
+            <div class="filter-bar">
+                <input type="text" id="advisorSearch" placeholder="Search by name or email..." onkeyup="filterAdvisors()">
+                <select id="advisorDeptFilter" onchange="filterAdvisors()">
+                    <option value="">All Departments</option>
+                    <option value="ECE">ECE</option>
+                    <option value="CSE">CSE</option>
+                    <option value="MECH">MECH</option>
+                    <option value="IT">IT</option>
+                    <option value="EEE">EEE</option>
+                    <option value="CIVIL">CIVIL</option>
+                </select>
+            </div>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                    <tr><th>#</th><th>Name</th><th>Email</th><th>Department</th><th>Section</th><th>Designation</th><th>Phone</th><th>Actions</th></tr>
+                    </thead>
+                    <tbody id="advisorTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══════════ TAB 3 — ANALYTICS ══════════ -->
+    <div id="tab-analytics" class="tab-content">
+        <div class="panel" style="margin-bottom:20px">
+            <div class="panel-header">
+                <h2>
+                    <svg class="icon" viewBox="0 0 24 24"><path d="M4 20V10M12 20V4M20 20v-7"/></svg>
+                    Department Analytics
+                </h2>
+                <div class="panel-actions">
+                    <button class="btn btn-purple" onclick="refreshAllStudents()">
+                        <svg class="icon" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-2.6-6.3M21 4v5h-5"/></svg>
+                        Refresh All Stats
+                    </button>
+                    <button class="btn btn-teal" onclick="recalculateRanks()">
+                        <svg class="icon" viewBox="0 0 24 24"><path d="M8 21h8M12 17v4M7 4h10v4a5 5 0 0 1-10 0V4Z"/><path d="M7 5H4a3 3 0 0 0 3 5M17 5h3a3 3 0 0 1-3 5"/></svg>
+                        Recalculate Ranks
+                    </button>
+                </div>
+            </div>
+            <div class="dept-grid" id="deptAnalyticsGrid"></div>
+        </div>
+    </div>
+    <div id="tab-contests" class="tab-content">
+        <div class="panel">
+            <div class="panel-header">
+                <h2>
+                    <svg class="icon" viewBox="0 0 24 24"><path d="M8 21h8M12 17v4M7 4h10v4a5 5 0 0 1-10 0V4Z"/><path d="M7 5H4a3 3 0 0 0 3 5M17 5h3a3 3 0 0 1-3 5"/></svg>
+                    Upcoming Contests
+                </h2>
+            </div>
+            <div id="upcomingContests" style="margin-bottom:24px">
+                <div style="color:#9aa4bb">Loading...</div>
+            </div>
+            <div class="panel-header">
+                <h2>
+                    <svg class="icon" viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>
+                    Recent Contests
+                </h2>
+            </div>
+            <div id="pastContests">
+                <div style="color:#9aa4bb">Loading...</div>
+            </div>
+        </div>
+    </div>
+
+</div><!-- end main -->
+
+<!-- STUDENT MODAL -->
+<!-- CREATE STUDENT ACCOUNT MODAL -->
+<div class="modal-overlay" id="createStudentModal">
+    <div class="modal-box" style="max-width:520px">
+        <h2>Create Student Account</h2>
+        <p class="modal-sub">Student will use these credentials to login</p>
+        <p class="section-title">Login Credentials</p>
+        <div class="form-grid">
+            <div class="form-group">
+                <label>Full Name *</label>
+                <input type="text" id="csName" placeholder="Student name">
+            </div>
+            <div class="form-group">
+                <label>Register Number *</label>
+                <input type="text" id="csReg" placeholder="e.g. 711523BEC046">
+            </div>
+            <div class="form-group">
+                <label>Email (Login ID) *</label>
+                <input type="email" id="csEmail" placeholder="student email">
+            </div>
+            <div class="form-group">
+                <label>Password *</label>
+                <input type="password" id="csPassword" placeholder="Set password">
+            </div>
+            <div class="form-group">
+                <label>Department *</label>
+                <select id="csDept">
+                    <option value="">Select</option>
+                    <option value="ECE">ECE</option>
+                    <option value="CSE">CSE</option>
+                    <option value="MECH">MECH</option>
+                    <option value="IT">IT</option>
+                    <option value="EEE">EEE</option>
+                    <option value="CIVIL">CIVIL</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Year</label>
+                <input type="text" id="csYear" placeholder="e.g. 3">
+            </div>
+            <div class="form-group">
+                <label>Section</label>
+                <input type="text" id="csSection" placeholder="e.g. B">
+            </div>
+            <div class="form-group">
+                <label>Batch</label>
+                <input type="text" id="csBatch" placeholder="e.g. 2023-2027">
+            </div>
+            <div class="form-group">
+                <label>Phone</label>
+                <input type="text" id="csPhone" placeholder="Phone number">
+            </div>
+        </div>
+        <p class="modal-msg" id="createStudentMsg"></p>
+        <div class="modal-footer">
+            <button class="btn btn-danger" onclick="closeCreateStudentModal()">Cancel</button>
+            <button class="btn btn-primary" onclick="createStudentAccount()">Create Account</button>
+        </div>
+    </div>
+</div>
+
+<!-- ADVISOR MODAL -->
+<div class="modal-overlay" id="advisorModal">
+    <div class="modal-box" style="max-width:480px">
+        <h2 id="advisorModalTitle">Add Advisor</h2>
+        <p class="modal-sub">Fill in advisor details</p>
+        <div class="form-grid">
+            <div class="form-group"><label>Full Name *</label><input type="text" id="aName"></div>
+            <div class="form-group"><label>Email *</label><input type="email" id="aEmail"></div>
+            <div class="form-group"><label>Department *</label>
+                <select id="aDept"><option value="">Select</option>
+                    <option value="ECE">ECE</option><option value="CSE">CSE</option>
+                    <option value="MECH">MECH</option><option value="IT">IT</option>
+                    <option value="EEE">EEE</option><option value="CIVIL">CIVIL</option>
+                </select>
+            </div>
+            <div class="form-group"><label>Section</label><input type="text" id="aSec"></div>
+            <div class="form-group"><label>Designation</label><input type="text" id="aDesig" placeholder="e.g. Asst. Professor"></div>
+            <div class="form-group"><label>Phone</label><input type="text" id="aPhone"></div>
+        </div>
+        <p class="modal-msg" id="advisorModalMsg"></p>
+        <div class="modal-footer">
+            <button class="btn btn-danger" onclick="closeAdvisorModal()">Cancel</button>
+            <button class="btn btn-primary" onclick="saveAdvisor()">Save Advisor</button>
+        </div>
+    </div>
+</div>
+
+<!-- EXPORT MODAL -->
+<div class="modal-overlay" id="exportModal">
+    <div class="export-box">
+        <div class="export-header">
+            <h2>Customize Excel Export</h2>
+            <span class="close-x" onclick="closeExportModal()">&times;</span>
+        </div>
+        <div class="export-toolbar">
+            <p>Drag to reorder &bull; Check to include</p>
+            <button class="sel-all-btn" onclick="toggleSelectAll()">Select All</button>
+        </div>
+        <div id="sortableColumns">
+            <div class="col-group">Basic Info</div>
+            <div class="column-card" draggable="true"><input type="checkbox" value="name" checked><span>Name</span></div>
+            <div class="column-card" draggable="true"><input type="checkbox" value="registerNumber" checked><span>Register Number</span></div>
+            <div class="column-card" draggable="true"><input type="checkbox" value="department" checked><span>Department</span></div>
+            <div class="column-card" draggable="true"><input type="checkbox" value="section" checked><span>Section</span></div>
+            <div class="column-card" draggable="true"><input type="checkbox" value="year" checked><span>Year</span></div>
+            <div class="column-card" draggable="true"><input type="checkbox" value="email"><span>Email</span></div>
+            <div class="column-card" draggable="true"><input type="checkbox" value="phoneNumber"><span>Phone</span></div>
+            <div class="col-group">Usernames</div>
+            <div class="column-card" draggable="true"><input type="checkbox" value="leetcodeUsername" checked><span>LeetCode Username</span></div>
+            <div class="column-card" draggable="true"><input type="checkbox" value="codechefUsername" checked><span>CodeChef Username</span></div>
+            <div class="column-card" draggable="true"><input type="checkbox" value="codeforcesUsername" checked><span>Codeforces Username</span></div>
+            <div class="column-card" draggable="true"><input type="checkbox" value="githubUsername"><span>GitHub</span></div>
+            <div class="column-card" draggable="true"><input type="checkbox" value="hackerrankUsername"><span>HackerRank</span></div>
+            <div class="column-card" draggable="true"><input type="checkbox" value="geeksforgeeksUsername"><span>GeeksforGeeks</span></div>
+            <div class="col-group">LeetCode Stats</div>
+            <div class="column-card" draggable="true"><input type="checkbox" value="leetcodeEasySolved" checked><span>Easy Solved</span></div>
+            <div class="column-card" draggable="true"><input type="checkbox" value="leetcodeMediumSolved" checked><span>Medium Solved</span></div>
+            <div class="column-card" draggable="true"><input type="checkbox" value="leetcodeHardSolved" checked><span>Hard Solved</span></div>
+            <div class="column-card" draggable="true"><input type="checkbox" value="leetcodeTotalSolved" checked><span>Total Solved</span></div>
+            <div class="column-card" draggable="true"><input type="checkbox" value="leetcodeContestCount"><span>Contest Count</span></div>
+            <div class="column-card" draggable="true"><input type="checkbox" value="leetcodeContestRating" checked><span>Contest Rating</span></div>
+            <div class="column-card" draggable="true"><input type="checkbox" value="leetcodeGlobalRank"><span>Global Rank</span></div>
+            <div class="column-card" draggable="true"><input type="checkbox" value="leetcodeTopPercentage"><span>Top %</span></div>
+            <div class="col-group">CodeChef Stats</div>
+            <div class="column-card" draggable="true"><input type="checkbox" value="codechefCurrentRating" checked><span>Current Rating</span></div>
+            <div class="column-card" draggable="true"><input type="checkbox" value="codechefHighestRating" checked><span>Highest Rating</span></div>
+            <div class="column-card" draggable="true"><input type="checkbox" value="codechefDivision"><span>Division</span></div>
+            <div class="column-card" draggable="true"><input type="checkbox" value="codechefStars"><span>Stars</span></div>
+            <div class="column-card" draggable="true"><input type="checkbox" value="codechefGlobalRank"><span>Global Rank</span></div>
+            <div class="column-card" draggable="true"><input type="checkbox" value="codechefCountryRank"><span>Country Rank</span></div>
+            <div class="column-card" draggable="true"><input type="checkbox" value="codechefContests"><span>Contests</span></div>
+            <div class="column-card" draggable="true"><input type="checkbox" value="codechefProblemsSolved" checked><span>Problems Solved</span></div>
+            <div class="col-group">Codeforces Stats</div>
+            <div class="column-card" draggable="true"><input type="checkbox" value="codeforcesCurrentRating" checked><span>Current Rating</span></div>
+            <div class="column-card" draggable="true"><input type="checkbox" value="codeforcesMaxRating" checked><span>Max Rating</span></div>
+            <div class="column-card" draggable="true"><input type="checkbox" value="codeforcesCurrentRank"><span>Current Rank</span></div>
+            <div class="column-card" draggable="true"><input type="checkbox" value="codeforcesMaxRank"><span>Max Rank</span></div>
+            <div class="column-card" draggable="true"><input type="checkbox" value="codeforcesProblemsCount" checked><span>Problems Count</span></div>
+            <div class="column-card" draggable="true"><input type="checkbox" value="codeforcesContests"><span>Contests</span></div>
+            <div class="column-card" draggable="true"><input type="checkbox" value="codeforcesLevel"><span>Level</span></div>
+            <div class="col-group">Overall</div>
+            <div class="column-card" draggable="true"><input type="checkbox" value="totalSolved" checked><span>Total Solved</span></div>
+            <div class="column-card" draggable="true"><input type="checkbox" value="totalContests"><span>Total Contests</span></div>
+            <div class="column-card" draggable="true"><input type="checkbox" value="highestRating" checked><span>Highest Rating</span></div>
+            <div class="column-card" draggable="true"><input type="checkbox" value="departmentRank" checked><span>Department Rank</span></div>
+            <div class="column-card" draggable="true"><input type="checkbox" value="collegeRank" checked><span>College Rank</span></div>
+            <div class="column-card" draggable="true"><input type="checkbox" value="linkedinUrl"><span>LinkedIn</span></div>
+            <div class="column-card" draggable="true"><input type="checkbox" value="portfolioUrl"><span>Portfolio</span></div>
+            <div class="column-card" draggable="true"><input type="checkbox" value="lastUpdated" checked><span>Last Updated</span></div>
+        </div>
+        <button class="export-btn-main" onclick="exportCustomExcel()">
+            <svg class="icon" viewBox="0 0 24 24"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg>
+            Export Selected Columns
+        </button>
+    </div>
+</div>
+<!-- CREATE ADVISOR MODAL -->
+<div class="modal-overlay" id="createAdvisorModal">
+    <div class="modal-box" style="max-width:480px">
+        <h2>Create Advisor Account</h2>
+        <p class="modal-sub">
+            Advisor will use these credentials to login
+        </p>
+        <div class="form-grid">
+            <div class="form-group">
+                <label>Full Name *</label>
+                <input type="text" id="caName"
+                       placeholder="Advisor name">
+            </div>
+            <div class="form-group">
+                <label>Email (Login ID) *</label>
+                <input type="email" id="caEmail"
+                       placeholder="college email">
+            </div>
+            <div class="form-group">
+                <label>Password *</label>
+                <input type="password" id="caPassword"
+                       placeholder="Set password">
+            </div>
+            <div class="form-group">
+                <label>Department *</label>
+                <select id="caDept">
+                    <option value="">Select</option>
+                    <option value="ECE">ECE</option>
+                    <option value="CSE">CSE</option>
+                    <option value="MECH">MECH</option>
+                    <option value="IT">IT</option>
+                    <option value="EEE">EEE</option>
+                    <option value="CIVIL">CIVIL</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Section</label>
+                <input type="text" id="caSection"
+                       placeholder="e.g. A">
+            </div>
+            <div class="form-group">
+                <label>Designation</label>
+                <input type="text" id="caDesignation"
+                       placeholder="e.g. Asst. Professor">
+            </div>
+            <div class="form-group">
+                <label>Phone</label>
+                <input type="text" id="caPhone"
+                       placeholder="Phone number">
+            </div>
+        </div>
+        <p class="modal-msg" id="createAdvisorMsg"></p>
+        <div class="modal-footer">
+            <button class="btn btn-danger"
+                    onclick="closeCreateAdvisorModal()">
+                Cancel
+            </button>
+            <button class="btn btn-primary"
+                    onclick="createAdvisorAccount()">
+                Create Account
+            </button>
+        </div>
+    </div>
+</div>
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script src="admin.js"></script>
+</body>
+</html>
