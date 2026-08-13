@@ -1,5 +1,5 @@
 // Note: swap this to your Railway URL once you deploy analytics.html live
-const API_URL = "http://localhost:8080";
+const API_URL = "";
 
 let leetcodeData = emptyData();
 let codechefData = emptyData();

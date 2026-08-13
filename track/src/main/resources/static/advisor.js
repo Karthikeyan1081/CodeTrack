@@ -1,4 +1,4 @@
-const BASE_URL = "http://localhost:8080";
+const BASE_URL = "";
 const API = BASE_URL + "/students";
 let studentsData = [];
 let editingId = null;

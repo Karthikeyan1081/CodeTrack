@@ -1,4 +1,4 @@
-const API = "http://localhost:8080/auth";
+const API = "/auth";
 
 /* =========================================
             LOGIN

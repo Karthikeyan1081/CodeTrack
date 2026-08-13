@@ -1,4 +1,4 @@
-const BASE_URL = "http://localhost:8080";
+const BASE_URL = "";
 const API    = BASE_URL + "/students";
 const GH_API = BASE_URL + "/github";
 const LC_API = BASE_URL + "/leetcode";
