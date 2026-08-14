@@ -76,6 +76,7 @@ function loadStudent() {
         checkFirstLogin(s);
         loadAllPlatforms(s);
         renderGitHubQuick(s.githubUsername);
+        loadLastContestStatus(register);
 
         // Poll if usernames exist but stats are still 0
         const hasUsernames = s.leetcodeUsername ||
@@ -186,6 +187,7 @@ function saveFirstLoginProfile() {
             .classList.remove("active");
         loadAllPlatforms(data);
         renderGitHubQuick(data.githubUsername);
+        loadLastContestStatus(data.registerNumber);
     })
     .catch(() => {
         msg.style.color = "red";
@@ -276,6 +278,102 @@ function updateBestPlatform() {
     ];
     platforms.sort((a, b) => b.v - a.v);
     set("bestPlatform", platforms[0].name);
+}
+
+/* ══════════════════════════════════════
+   LAST CONTEST STATUS  (NEW)
+   Fetches attendance for the most recent finished
+   contest per platform: shows solved-question names
+   when attended, or "not attended, last was X on
+   dd/mm/yyyy" when not.
+══════════════════════════════════════ */
+const LAST_CONTEST_META = {
+    leetcode:   { label: "LeetCode",   cls: "lc", icon: 'M13 2 4 14h6l-1 8 9-12h-6l1-8Z' },
+    codechef:   { label: "CodeChef",   cls: "cc", icon: 'M12 2 2 7l10 5 10-5-10-5Z' },
+    codeforces: { label: "Codeforces", cls: "cf", icon: 'M8 21h8M12 17v4M7 4h10v4a5 5 0 0 1-10 0V4Z' }
+};
+
+function loadLastContestStatus(register) {
+    const grid = document.getElementById("lastContestGrid");
+    if (!grid) return;
+    grid.innerHTML = Object.keys(LAST_CONTEST_META)
+        .map(k => `<div class="lc-card ${LAST_CONTEST_META[k].cls}">
+            <div class="lc-head"><span class="lc-plat">${LAST_CONTEST_META[k].label}</span></div>
+            <div class="lc-body"><span class="spinner"></span> Loading...</div>
+        </div>`).join("");
+
+    fetch(`${API}/register/${register}/last-contest`, { headers: authHeaders() })
+    .then(r => r.json())
+    .then(data => {
+        grid.innerHTML = Object.keys(LAST_CONTEST_META)
+            .map(k => lastContestCardHtml(k, data[k]))
+            .join("");
+    })
+    .catch(() => {
+        grid.innerHTML = `<div style="color:#94a3b8;font-size:13px">Failed to load last contest status</div>`;
+    });
+}
+
+function fmtDMY(iso) {
+    if (!iso || iso.length < 10) return "-";
+    const [y, m, d] = iso.substring(0, 10).split("-");
+    return `${d}/${m}/${y}`;
+}
+
+function lastContestCardHtml(platformKey, d) {
+    const meta = LAST_CONTEST_META[platformKey];
+    if (!d || d.attended === null || d.attended === undefined) {
+        return `
+        <div class="lc-card ${meta.cls}">
+            <div class="lc-head">
+                <span class="lc-plat"><svg class="icon" viewBox="0 0 24 24"><path d="${meta.icon}"/></svg>${meta.label}</span>
+                <span class="lc-status unset">Not Set</span>
+            </div>
+            <div class="lc-body">
+                <div class="lc-unset-msg">Add your ${meta.label} username in Settings to track contests.</div>
+            </div>
+        </div>`;
+    }
+
+    if (d.attended) {
+        const hasTotal = d.totalProblems != null;
+        const pct = hasTotal && d.totalProblems > 0 ? Math.round((d.solvedCount / d.totalProblems) * 100) : null;
+        const namesHtml = (d.solvedProblemNames && d.solvedProblemNames.length)
+            ? `<ul class="lc-question-list">${d.solvedProblemNames.map(n => `<li>${n}</li>`).join("")}</ul>`
+            : (d.solvedCount != null ? `<div class="lc-names-unavailable">Question names not available for ${meta.label}</div>` : "");
+
+        return `
+        <div class="lc-card ${meta.cls}">
+            <div class="lc-head">
+                <span class="lc-plat"><svg class="icon" viewBox="0 0 24 24"><path d="${meta.icon}"/></svg>${meta.label}</span>
+                <span class="lc-status attended">✓ Attended</span>
+            </div>
+            <div class="lc-body">
+                <div class="lc-contest-name">${d.contestName || "-"}</div>
+                <div class="lc-contest-date">📅 ${fmtDMY(d.contestDate)}</div>
+                ${d.solvedCount != null ? `
+                <div class="lc-solved-row">
+                    <span class="lc-solved-num">${d.solvedCount}${hasTotal ? "/" + d.totalProblems : ""}</span>
+                    <span class="lc-solved-label">questions solved</span>
+                </div>
+                ${pct != null ? `<div class="lc-bar-track"><div class="lc-bar-fill" style="width:${pct}%"></div></div>` : ""}
+                ` : `<div class="lc-names-unavailable">Attended — solved count not available for ${meta.label}</div>`}
+                ${namesHtml}
+            </div>
+        </div>`;
+    }
+
+    return `
+    <div class="lc-card ${meta.cls}">
+        <div class="lc-head">
+            <span class="lc-plat"><svg class="icon" viewBox="0 0 24 24"><path d="${meta.icon}"/></svg>${meta.label}</span>
+            <span class="lc-status missed">✕ Missed</span>
+        </div>
+        <div class="lc-body">
+            <div class="lc-missed-msg">Not attended</div>
+            <div class="lc-missed-sub">Last contest: ${d.contestName || "-"}<br>on ${fmtDMY(d.contestDate)}</div>
+        </div>
+    </div>`;
 }
 
 /* ══════════════════════════════════════
@@ -463,6 +561,7 @@ function saveSettings() {
         populateProfile(data);
         loadAllPlatforms(data);
         renderGitHubQuick(data.githubUsername);
+        loadLastContestStatus(data.registerNumber);
         msg.style.color = "#16a34a";
         msg.innerText = "✅ Profile updated successfully!";
         setTimeout(() => msg.innerText = "", 3000);
