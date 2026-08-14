@@ -212,12 +212,23 @@ body{
     .right-panel{
         flex:1;
         padding:32px 20px;
+        width:100%;
     }
     .login-card{
         max-width:100%;
+        width:100%;
     }
     .toggle-container{
         width:100%;
         max-width:320px;
+    }
+    .toggle-slider{
+        width:calc(50% - 5px);
+    }
+    .toggle-slider.right{
+        left:calc(50% + 0px);
+    }
+    .toggle-btn{
+        font-size:13px;
     }
 }
